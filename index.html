@@ -5,61 +5,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ロシア語学習アプリ</title>
-<link rel="apple-touch-icon" href="icon-512.png">
+<title>ロシア語クイズ</title>
+
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
-  
+
 <style>
 
 body{
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI";
-background:#f2f2f7;
-margin:0;
-padding:20px;
-}
-
-.container{
-background:white;
-padding:20px;
-border-radius:15px;
-box-shadow:0 4px 15px rgba(0,0,0,0.15);
-max-width:500px;
-margin:auto;
+ font-family:sans-serif;
+ margin:20px;
+ background:#f2f2f7;
 }
 
 button{
-font-size:18px;
-padding:12px;
-margin:5px;
-border:none;
-border-radius:10px;
-background:#317EFB;
-color:white;
-width:100%;
+ margin:5px;
+ padding:10px;
+ font-size:16px;
 }
 
 input{
-font-size:20px;
-padding:10px;
-width:100%;
-margin:10px 0;
+ padding:10px;
+ font-size:16px;
+ margin:5px;
 }
 
-.keyboard button{
-width:11%;
-margin:1%;
-padding:8px;
-font-size:16px;
-}
-
-.word-item{
-display:flex;
-justify-content:space-between;
-margin:5px 0;
-}
-
-.menu button{
-width:48%;
+.card{
+ background:white;
+ padding:15px;
+ margin:10px;
+ border-radius:10px;
+ box-shadow:0 0 5px rgba(0,0,0,0.2);
 }
 
 </style>
@@ -67,112 +43,145 @@ width:48%;
 </head>
 <body>
 
-<div class="container">
+<h2>🇯🇵↔🇷🇺 ロシア語クイズ（完全版）</h2>
 
-<h2>ロシア語学習</h2>
+<button onclick="showMenu('add')">単語追加</button>
+<button onclick="showMenu('list')">単語一覧</button>
+<button onclick="showMenu('jp_ru')">日→露</button>
+<button onclick="showMenu('ru_jp')">露→日</button>
+<button onclick="exportWords()">エクスポート</button>
+<input type="file" onchange="importWords(event)">
 
-<div class="menu">
-
-<button onclick="showAdd()">単語追加</button>
-<button onclick="showList()">単語一覧</button>
-<button onclick="startQuiz('jp')">日→露</button>
-<button onclick="startQuiz('ru')">露→日</button>
-
-</div>
-
-<div id="content"></div>
-
-</div>
+<div id="app"></div>
 
 <script>
 
 // =====================
-// データ保存
+// データ
 // =====================
 
 let words = JSON.parse(localStorage.getItem("words") || "{}");
-let mistakes = JSON.parse(localStorage.getItem("mistakes") || "{}");
 
 function saveWords(){
-localStorage.setItem("words", JSON.stringify(words));
+ localStorage.setItem("words", JSON.stringify(words));
 }
 
-function saveMistakes(){
-localStorage.setItem("mistakes", JSON.stringify(mistakes));
+// =====================
+// バックアップ機能
+// =====================
+
+function exportWords(){
+
+ let data = JSON.stringify(words, null, 2);
+
+ let blob = new Blob([data], {type:"application/json"});
+
+ let url = URL.createObjectURL(blob);
+
+ let a = document.createElement("a");
+ a.href = url;
+ a.download = "words_backup.json";
+ a.click();
+
+}
+
+function importWords(event){
+
+ let file = event.target.files[0];
+
+ let reader = new FileReader();
+
+ reader.onload = function(){
+
+  words = JSON.parse(reader.result);
+
+  saveWords();
+
+  alert("復元完了");
+
+ };
+
+ reader.readAsText(file);
+
+}
+
+// =====================
+// メニュー
+// =====================
+
+function showMenu(menu){
+
+ let app = document.getElementById("app");
+
+ if(menu=="add"){
+
+  app.innerHTML=`
+
+<div class="card">
+
+日本語<br>
+<input id="jp"><br>
+
+ロシア語<br>
+<input id="ru"><br>
+
+<button onclick="addWord()">保存</button>
+
+</div>
+
+`;
+
+ }
+
+ if(menu=="list"){
+
+  let html="<div class='card'>";
+
+  for(let jp in words){
+
+   html+=jp+" : "+words[jp].ru+
+   " Lv."+words[jp].level+
+   "<br>";
+
+  }
+
+  html+="</div>";
+
+  app.innerHTML=html;
+
+ }
+
+ if(menu=="jp_ru"){
+  newQuestion("jp_ru");
+ }
+
+ if(menu=="ru_jp"){
+  newQuestion("ru_jp");
+ }
+
 }
 
 // =====================
 // 単語追加
 // =====================
 
-function showAdd(){
-
-content.innerHTML=`
-
-<input id="jp" placeholder="日本語">
-
-<input id="ru" placeholder="ロシア語">
-
-<button onclick="addWord()">保存</button>
-
-`;
-
-}
-
 function addWord(){
 
-let jp=document.getElementById("jp").value;
-let ru=document.getElementById("ru").value;
+ let jp=document.getElementById("jp").value;
+ let ru=document.getElementById("ru").value;
 
-if(!jp||!ru)return;
+ words[jp]={
 
-words[jp]={
+  ru:ru,
+  level:0,
+  correct:0,
+  wrong:0
 
-ru:ru,
-level:0,
-correct:0,
-wrong:0
+ };
 
-};
+ saveWords();
 
-saveWords();
-
-alert("保存しました");
-
-}
-
-// =====================
-// 単語一覧
-// =====================
-
-function showList(){
-
-let html="";
-
-for(let jp in words){
-
-let w=words[jp];
-
-html+=`
-<div class="word-item">
-<span>${jp} → ${w.ru} (Lv.${w.level})</span>
-<button onclick="deleteWord('${jp}')">削除</button>
-</div>
-`;
-
-}
-
-content.innerHTML=html;
-
-}
-
-function deleteWord(jp){
-
-delete words[jp];
-
-saveWords();
-
-showList();
+ alert("保存");
 
 }
 
@@ -182,219 +191,188 @@ showList();
 
 function weightedChoice(){
 
-let pool=[];
+ let pool=[];
 
-for(let jp in words){
+ for(let jp in words){
 
-let level=words[jp].level;
+  let weight=5-words[jp].level;
 
-let weight=5-level;
+  for(let i=0;i<weight;i++){
+   pool.push(jp);
+  }
 
-for(let i=0;i<weight;i++)
-pool.push(jp);
+ }
 
-}
-
-return pool[Math.floor(Math.random()*pool.length)];
+ return pool[Math.floor(Math.random()*pool.length)];
 
 }
 
 // =====================
-// クイズ
+// 問題
 // =====================
 
-let current;
-let mode;
+let currentJP="";
+let mode="";
 
-function startQuiz(m){
+function newQuestion(m){
 
-if(Object.keys(words).length<4){
+ mode=m;
 
-alert("単語を4つ以上登録してください");
+ currentJP=weightedChoice();
 
-return;
+ let ru=words[currentJP].ru;
 
-}
+ let app=document.getElementById("app");
 
-mode=m;
+ if(m=="jp_ru"){
 
-nextQuestion();
+  app.innerHTML=`
 
-}
+<div class="card">
 
-function nextQuestion(){
+問題: ${currentJP}<br>
 
-let jp=weightedChoice();
-
-current={
-
-jp:jp,
-ru:words[jp].ru
-
-};
-
-if(mode=="jp"){
-
-content.innerHTML=`
-
-<h3>${jp}</h3>
-
-<input id="answer">
-
-<button onclick="check()">回答</button>
+<input id="answer"><br>
 
 <div id="keyboard"></div>
 
-`;
+<button onclick="checkAnswer()">回答</button>
 
-createKeyboard();
-
-}
-
-else{
-
-let choices=[jp];
-
-let keys=Object.keys(words);
-
-while(choices.length<4){
-
-let fake=keys[Math.floor(Math.random()*keys.length)];
-
-if(!choices.includes(fake))
-choices.push(fake);
-
-}
-
-choices.sort(()=>Math.random()-0.5);
-
-let buttons="";
-
-choices.forEach(c=>{
-
-buttons+=`<button onclick="checkChoice('${c}')">${c}</button>`;
-
-});
-
-content.innerHTML=`
-
-<h3>${current.ru}</h3>
-
-${buttons}
+</div>
 
 `;
 
-}
+ showKeyboard();
+
+ }
+
+ if(m=="ru_jp"){
+
+  let choices=[currentJP];
+
+  let keys=Object.keys(words);
+
+  while(choices.length<4){
+
+   let fake=keys[Math.floor(Math.random()*keys.length)];
+
+   if(!choices.includes(fake)){
+    choices.push(fake);
+   }
+
+  }
+
+  choices.sort(()=>Math.random()-0.5);
+
+  let html=`<div class="card">
+
+問題: ${ru}<br>
+
+`;
+
+  for(let c of choices){
+
+   html+=`<button onclick="selectAnswer('${c}')">${c}</button><br>`;
+
+  }
+
+  html+="</div>";
+
+  app.innerHTML=html;
+
+ }
 
 }
 
 // =====================
-// 回答チェック
+// キーボード
 // =====================
 
-function check(){
+function showKeyboard(){
 
-let ans=document.getElementById("answer").value;
+ let letters="абвгдеёжзийклмнопрстуфхцчшщыьэюя";
 
-if(ans==current.ru){
+ let html="";
 
-alert("正解");
+ for(let l of letters){
 
-words[current.jp].correct++;
+  html+=`<button onclick="addLetter('${l}')">${l}</button>`;
 
-if(words[current.jp].level<4)
-words[current.jp].level++;
+ }
 
-}
-
-else{
-
-alert("不正解 正解："+current.ru);
-
-words[current.jp].wrong++;
-
-if(words[current.jp].level>0)
-words[current.jp].level--;
-
-mistakes[current.jp]=(mistakes[current.jp]||0)+1;
-
-saveMistakes();
+ document.getElementById("keyboard").innerHTML=html;
 
 }
 
-saveWords();
+function addLetter(l){
 
-nextQuestion();
+ let input=document.getElementById("answer");
 
-}
-
-function checkChoice(ans){
-
-if(ans==current.jp){
-
-alert("正解");
-
-words[current.jp].correct++;
-
-if(words[current.jp].level<4)
-words[current.jp].level++;
-
-}
-
-else{
-
-alert("不正解 正解："+current.jp);
-
-words[current.jp].wrong++;
-
-if(words[current.jp].level>0)
-words[current.jp].level--;
-
-mistakes[current.jp]=(mistakes[current.jp]||0)+1;
-
-saveMistakes();
-
-}
-
-saveWords();
-
-nextQuestion();
+ input.value+=l;
 
 }
 
 // =====================
-// キリルキーボード
+// 回答
 // =====================
 
-function createKeyboard(){
+function checkAnswer(){
 
-let letters="абвгдеёжзийклмнопрстуфхцчшщыьэюя";
+ let ans=document.getElementById("answer").value;
 
-let html="<div class='keyboard'>";
+ let correct=words[currentJP].ru;
 
-for(let l of letters){
-
-html+=`<button onclick="typeLetter('${l}')">${l}</button>`;
+ judge(ans,correct);
 
 }
 
-html+="</div>";
+function selectAnswer(ans){
 
-keyboard.innerHTML=html;
+ let correct=currentJP;
+
+ judge(ans,correct);
 
 }
 
-function typeLetter(l){
+function judge(ans,correct){
 
-answer.value+=l;
+ if(ans.trim().toLowerCase()==correct.toLowerCase()){
+
+  alert("正解");
+
+  words[currentJP].correct++;
+
+  if(words[currentJP].level<4){
+   words[currentJP].level++;
+  }
+
+ }
+
+ else{
+
+  alert("不正解 正解:"+correct);
+
+  words[currentJP].wrong++;
+
+  if(words[currentJP].level>0){
+   words[currentJP].level--;
+  }
+
+ }
+
+ saveWords();
+
+ newQuestion(mode);
 
 }
 
 // =====================
+// 初期表示
+// =====================
+
+showMenu("add");
 
 </script>
 
 </body>
-
 </html>
-
