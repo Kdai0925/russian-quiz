@@ -43,16 +43,24 @@ input{
 </head>
 <body>
 
-<h2>ロシア語学習</h2>
+<div class="container">
 
-<button onclick="showMenu('add')">単語追加</button>
-<button onclick="showMenu('list')">単語一覧</button>
-<button onclick="showMenu('jp_ru')">日→露</button>
-<button onclick="showMenu('ru_jp')">露→日</button>
-<button onclick="exportWords()">エクスポート</button>
-<input type="file" onchange="importWords(event)">
+  <h1>ロシア語学習</h1>
 
-<div id="app"></div>
+  <div class="menu">
+
+    <button onclick="showMenu('add')">単語追加</button>
+    <button onclick="showMenu('list')">単語一覧</button>
+    <button onclick="showMenu('jp_ru')">日→露</button>
+    <button onclick="showMenu('ru_jp')">露→日</button>
+    <button onclick="exportWords()">エクスポート</button>
+    <input type="file" onchange="importWords(event)">
+
+  </div>
+
+  <div id="app"></div>
+
+</div>
 
 <script>
 
@@ -376,5 +384,6 @@ showMenu("add");
 
 </body>
 </html>
+
 
 
