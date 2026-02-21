@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>🇯🇵↔🇷🇺 ロシア語クイズ</title>
+
+<style>
+
+body{
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI";
+background:#f2f2f7;
+margin:0;
+padding:20px;
+}
+
+.container{
+background:white;
+padding:20px;
+border-radius:15px;
+box-shadow:0 4px 15px rgba(0,0,0,0.15);
+max-width:500px;
+margin:auto;
+}
+
+button{
+font-size:18px;
+padding:12px;
+margin:5px;
+border:none;
+border-radius:10px;
+background:#317EFB;
+color:white;
+width:100%;
+}
+
+input{
+font-size:20px;
+padding:10px;
+width:100%;
+margin:10px 0;
+}
+
+.keyboard button{
+width:11%;
+margin:1%;
+padding:8px;
+font-size:16px;
+}
+
+.word-item{
+display:flex;
+justify-content:space-between;
+margin:5px 0;
+}
+
+.menu button{
+width:48%;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h2>🇯🇵↔🇷🇺 ロシア語クイズ</h2>
+
+<div class="menu">
+
+<button onclick="showAdd()">単語追加</button>
+<button onclick="showList()">単語一覧</button>
+<button onclick="startQuiz('jp')">日→露</button>
+<button onclick="startQuiz('ru')">露→日</button>
+
+</div>
+
+<div id="content"></div>
+
+</div>
+
+<script>
+
+// =====================
+// データ保存
+// =====================
+
+let words = JSON.parse(localStorage.getItem("words") || "{}");
+let mistakes = JSON.parse(localStorage.getItem("mistakes") || "{}");
+
+function saveWords(){
+localStorage.setItem("words", JSON.stringify(words));
+}
+
+function saveMistakes(){
+localStorage.setItem("mistakes", JSON.stringify(mistakes));
+}
+
+// =====================
+// 単語追加
+// =====================
+
+function showAdd(){
+
+content.innerHTML=`
+
+<input id="jp" placeholder="日本語">
+
+<input id="ru" placeholder="ロシア語">
+
+<button onclick="addWord()">保存</button>
+
+`;
+
+}
+
+function addWord(){
+
+let jp=document.getElementById("jp").value;
+let ru=document.getElementById("ru").value;
+
+if(!jp||!ru)return;
+
+words[jp]={
+
+ru:ru,
+level:0,
+correct:0,
+wrong:0
+
+};
+
+saveWords();
+
+alert("保存しました");
+
+}
+
+// =====================
+// 単語一覧
+// =====================
+
+function showList(){
+
+let html="";
+
+for(let jp in words){
+
+let w=words[jp];
+
+html+=`
+<div class="word-item">
+<span>${jp} → ${w.ru} (Lv.${w.level})</span>
+<button onclick="deleteWord('${jp}')">削除</button>
+</div>
+`;
+
+}
+
+content.innerHTML=html;
+
+}
+
+function deleteWord(jp){
+
+delete words[jp];
+
+saveWords();
+
+showList();
+
+}
+
+// =====================
+// 重み付き選択
+// =====================
+
+function weightedChoice(){
+
+let pool=[];
+
+for(let jp in words){
+
+let level=words[jp].level;
+
+let weight=5-level;
+
+for(let i=0;i<weight;i++)
+pool.push(jp);
+
+}
+
+return pool[Math.floor(Math.random()*pool.length)];
+
+}
+
+// =====================
+// クイズ
+// =====================
+
+let current;
+let mode;
+
+function startQuiz(m){
+
+if(Object.keys(words).length<4){
+
+alert("単語を4つ以上登録してください");
+
+return;
+
+}
+
+mode=m;
+
+nextQuestion();
+
+}
+
+function nextQuestion(){
+
+let jp=weightedChoice();
+
+current={
+
+jp:jp,
+ru:words[jp].ru
+
+};
+
+if(mode=="jp"){
+
+content.innerHTML=`
+
+<h3>${jp}</h3>
+
+<input id="answer">
+
+<button onclick="check()">回答</button>
+
+<div id="keyboard"></div>
+
+`;
+
+createKeyboard();
+
+}
+
+else{
+
+let choices=[jp];
+
+let keys=Object.keys(words);
+
+while(choices.length<4){
+
+let fake=keys[Math.floor(Math.random()*keys.length)];
+
+if(!choices.includes(fake))
+choices.push(fake);
+
+}
+
+choices.sort(()=>Math.random()-0.5);
+
+let buttons="";
+
+choices.forEach(c=>{
+
+buttons+=`<button onclick="checkChoice('${c}')">${c}</button>`;
+
+});
+
+content.innerHTML=`
+
+<h3>${current.ru}</h3>
+
+${buttons}
+
+`;
+
+}
+
+}
+
+// =====================
+// 回答チェック
+// =====================
+
+function check(){
+
+let ans=document.getElementById("answer").value;
+
+if(ans==current.ru){
+
+alert("正解");
+
+words[current.jp].correct++;
+
+if(words[current.jp].level<4)
+words[current.jp].level++;
+
+}
+
+else{
+
+alert("不正解 正解："+current.ru);
+
+words[current.jp].wrong++;
+
+if(words[current.jp].level>0)
+words[current.jp].level--;
+
+mistakes[current.jp]=(mistakes[current.jp]||0)+1;
+
+saveMistakes();
+
+}
+
+saveWords();
+
+nextQuestion();
+
+}
+
+function checkChoice(ans){
+
+if(ans==current.jp){
+
+alert("正解");
+
+words[current.jp].correct++;
+
+if(words[current.jp].level<4)
+words[current.jp].level++;
+
+}
+
+else{
+
+alert("不正解 正解："+current.jp);
+
+words[current.jp].wrong++;
+
+if(words[current.jp].level>0)
+words[current.jp].level--;
+
+mistakes[current.jp]=(mistakes[current.jp]||0)+1;
+
+saveMistakes();
+
+}
+
+saveWords();
+
+nextQuestion();
+
+}
+
+// =====================
+// キリルキーボード
+// =====================
+
+function createKeyboard(){
+
+let letters="абвгдеёжзийклмнопрстуфхцчшщыьэюя";
+
+let html="<div class='keyboard'>";
+
+for(let l of letters){
+
+html+=`<button onclick="typeLetter('${l}')">${l}</button>`;
+
+}
+
+html+="</div>";
+
+keyboard.innerHTML=html;
+
+}
+
+function typeLetter(l){
+
+answer.value+=l;
+
+}
+
+// =====================
+
+</script>
+
+</body>
+</html>
