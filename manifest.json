@@ -1,6 +1,6 @@
 {
-  "name": "ロシア語クイズ",
-  "short_name": "露語クイズ",
+  "name": "ロシア語学習",
+  "short_name": "露語学習",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f2f2f7",
@@ -17,4 +17,5 @@
       "type": "image/png"
     }
   ]
+
 }
