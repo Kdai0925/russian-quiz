@@ -299,7 +299,9 @@ function newQuestion(m){
 
 <div class="card">
 
-問題: ${currentJP}<br>
+問題: ${currentJP}
+<button onclick="speak('${words[currentJP].ru}')">🔊</button>
+<br>
 
 <input id="answer"><br>
 
@@ -308,7 +310,6 @@ function newQuestion(m){
 <button onclick="checkAnswer()">回答</button>
 
 </div>
-
 `;
 
  showKeyboard();
@@ -335,7 +336,9 @@ function newQuestion(m){
 
   let html=`<div class="card">
 
-問題: ${ru}<br>
+問題: ${ru}
+<button onclick="speak('${ru}')">🔊</button>
+<br>
 
 `;
 
@@ -381,6 +384,19 @@ function addLetter(l){
 
 }
 
+function speak(text){
+
+ const utter = new SpeechSynthesisUtterance(text);
+
+ utter.lang = "ru-RU";
+
+ utter.rate = 0.9;
+ utter.pitch = 1.0;
+
+ speechSynthesis.speak(utter);
+
+}
+ 
 // =====================
 // 回答
 // =====================
@@ -445,6 +461,7 @@ showMenu("add");
 
 </body>
 </html>
+
 
 
 
