@@ -384,14 +384,22 @@ function addLetter(l){
 
 }
 
+// 音声
 function speak(text){
+
+ if(!("speechSynthesis" in window)){
+  alert("音声非対応ブラウザです");
+  return;
+ }
+
+ speechSynthesis.cancel();
 
  const utter = new SpeechSynthesisUtterance(text);
 
  utter.lang = "ru-RU";
-
+ utter.volume = 1;
  utter.rate = 0.9;
- utter.pitch = 1.0;
+ utter.pitch = 1;
 
  speechSynthesis.speak(utter);
 
@@ -461,6 +469,7 @@ showMenu("add");
 
 </body>
 </html>
+
 
 
 
