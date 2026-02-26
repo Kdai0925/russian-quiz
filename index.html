@@ -259,6 +259,17 @@ function addWord(){
 
 }
 
+function deleteWord(jp){
+
+  if(!confirm(`「${jp}」を削除しますか？`)) return;
+
+  delete words[jp];
+
+  saveWords();
+
+  // 一覧を更新
+  showMenu("list");
+}
 // =====================
 // 重み付き選択
 // =====================
@@ -480,6 +491,7 @@ showMenu("add");
 
 </body>
 </html>
+
 
 
 
