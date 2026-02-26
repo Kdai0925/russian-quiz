@@ -206,24 +206,44 @@ function showMenu(menu){
 `;
 
  }
+if(menu=="list"){
 
- if(menu=="list"){
+  let html = "<div class='card'><h3>登録単語一覧</h3>";
 
-  let html="<div class='card'>";
+  const keys = Object.keys(words);
 
-  for(let jp in words){
+  if(keys.length === 0){
+    html += "<p>単語が登録されていません</p>";
+  } else {
+    for(const jp of keys){
+      const ru = words[jp].ru;
+      const lv = words[jp].level;
 
-   html+=jp+" : "+words[jp].ru+
-   " Lv."+words[jp].level+
-   "<br>";
-
+      html += `
+        <div class="word-row">
+          <div class="word-text">
+            <div class="word-main">${jp} → ${ru}</div>
+            <div class="word-sub">Lv.${lv}</div>
+          </div>
+          <button class="del-btn" data-jp="${encodeURIComponent(jp)}">削除</button>
+        </div>
+      `;
+    }
   }
 
-  html+="</div>";
+  html += "</div>";
 
-  app.innerHTML=html;
+  app.innerHTML = html;
 
- }
+  // ✅ ここが重要：一覧を描画した後にイベントを付ける
+  document.querySelectorAll(".del-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const jp = decodeURIComponent(btn.dataset.jp);
+      deleteWord(jp);
+    });
+  });
+}
+ 
 
  if(menu=="jp_ru"){
   newQuestion("jp_ru");
@@ -270,6 +290,17 @@ function deleteWord(jp){
   // 一覧を更新
   showMenu("list");
 }
+
+function deleteWord(jp){
+
+  if(!confirm(`「${jp}」を削除しますか？`)) return;
+
+  delete words[jp];
+
+  saveWords();
+
+  showMenu("list");
+} 
 // =====================
 // 重み付き選択
 // =====================
@@ -491,6 +522,7 @@ showMenu("add");
 
 </body>
 </html>
+
 
 
 
