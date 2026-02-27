@@ -154,9 +154,11 @@ window.speechSynthesis.onvoiceschanged = function() {
  speechSynthesis.getVoices();
 };
 
+ 
 // =====================
 // データ
 // =====================
+
 let words = JSON.parse(localStorage.getItem("words") || "{}");
 
 function saveWords(){
@@ -486,6 +488,7 @@ function speak(text){
 // =====================
 
 function checkAnswer(){
+
  let ans=document.getElementById("answer").value;
 
  let correct=words[currentJP].ru;
@@ -495,6 +498,7 @@ function checkAnswer(){
 }
 
 function selectAnswer(ans){
+
  let correct=currentJP;
 
  judge(ans,correct);
@@ -504,6 +508,7 @@ function selectAnswer(ans){
 function judge(ans,correct){
 
  if(ans.trim().toLowerCase()==correct.toLowerCase()){
+
   alert("正解");
 
   words[currentJP].correct++;
@@ -515,6 +520,7 @@ function judge(ans,correct){
  }
 
  else{
+
   alert("不正解 正解:"+correct);
 
   words[currentJP].wrong++;
@@ -541,6 +547,7 @@ showMenu("add");
 
 </body>
 </html>
+
 
 
 
