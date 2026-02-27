@@ -80,6 +80,44 @@ input.cell{
 .ok{ color:#8cffc1; text-shadow:0 0 10px rgba(140,255,193,0.5); }
 .ng{ color:#ff9aa2; text-shadow:0 0 10px rgba(255,154,162,0.5); }
 hr{ border:none; border-top:1px solid rgba(255,255,255,0.15); margin:12px 0; }
+/* ==== スマホで横はみ出し防止（レイアウトは維持） ==== */
+
+/* まずページ全体で横スクロールを禁止 */
+html, body{
+  overflow-x: hidden;
+}
+
+/* 表を枠内に収める（列幅を均等にして潰す） */
+table{
+  table-layout: fixed;   /* これが効く */
+  width: 100%;
+}
+
+/* セル内容が長いときに折り返す */
+th, td{
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* 入力欄がセル幅を超えないようにする */
+input.cell{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box; /* 重要：padding込みで100%にする */
+  min-width: 0;           /* iOSで効くことがある */
+}
+
+/* 左の「主格/生格…」列を少しだけ細くして圧縮 */
+td.case{
+  width: 74px;           /* 95px→小さめに */
+}
+
+/* スマホ時だけ文字を少し小さくして収める */
+@media (max-width: 420px){
+  th, td{ padding: 8px; font-size: 14px; }
+  input.cell{ font-size: 14px; padding: 9px; }
+  td.case{ width: 64px; }
+}
 </style>
 </head>
 
@@ -345,7 +383,16 @@ function renderQuestion(q){
 
 // ====== 答え合わせ ======
 function normalize(s){
-  return (s || "").trim();
+  return (s || "")
+    .trim()
+    // Unicode結合文字を分解（ё対策にも有効）
+    .normalize("NFD")
+    // アクセント記号（結合アキュート）を消す
+    .replace(/[\u0301]/g, "")
+    // 余計な連続スペースを1個に
+    .replace(/\s+/g, " ")
+    // 元の形に戻す
+    .normalize("NFC");
 }
 
 function isCorrect(rowKey, colIdx, userValue, correctValue, alts){
@@ -417,3 +464,4 @@ newQuestion();
 
 </body>
 </html>
+
