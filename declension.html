@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>格変化 穴埋め</title>
+<link rel="stylesheet" href="style.css"> <!-- 同じ冬デザイン使える -->
+</head>
+<body>
+<div class="container">
+
+  <h1>❄️ 格変化 穴埋め</h1>
+
+  <div class="card">
+    <div id="prompt">名詞 "стол"（机） 単数</div>
+
+    <table style="width:100%; margin-top:10px;">
+      <tr><td>主格</td><td>стол</td></tr>
+      <tr><td>生格</td><td><input id="gen" placeholder="例: стола"></td></tr>
+      <tr><td>与格</td><td><input id="dat" placeholder="例: столу"></td></tr>
+    </table>
+
+    <button onclick="check()">答え合わせ</button>
+    <div id="result"></div>
+  </div>
+
+  <button onclick="location.href='index.html'">← 戻る</button>
+
+</div>
+
+<script>
+const answer = { gen:"стола", dat:"столу" };
+
+function check(){
+  const gen = document.getElementById("gen").value.trim();
+  const dat = document.getElementById("dat").value.trim();
+
+  let ok = (gen === answer.gen && dat === answer.dat);
+
+  document.getElementById("result").innerText =
+    ok ? "⭕ 正解！" : `❌ 正解は 生格:${answer.gen} 与格:${answer.dat}`;
+}
+</script>
+
+</body>
+</html>
