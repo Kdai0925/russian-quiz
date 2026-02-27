@@ -158,7 +158,43 @@ window.speechSynthesis.onvoiceschanged = function() {
 // =====================
 // データ
 // =====================
+// =====================
+// 効果音（iOS対策込み）
+// =====================
+const correctSound = new Audio("correct.mp3");
+const wrongSound   = new Audio("wrong.mp3");
 
+// iOSは「ユーザー操作の後」じゃないと音が鳴らないので一度解禁する
+let audioUnlocked = false;
+
+function unlockAudioOnce(){
+  if(audioUnlocked) return;
+  audioUnlocked = true;
+
+  // 無音にして一瞬再生→停止（解禁）
+  [correctSound, wrongSound].forEach(a => {
+    a.volume = 0;
+    a.currentTime = 0;
+    a.play().then(() => {
+      a.pause();
+      a.currentTime = 0;
+      a.volume = 1;
+    }).catch(() => {
+      // ここは失敗してもOK（あとで押した時に鳴ることもある）
+      a.volume = 1;
+    });
+  });
+}
+
+function playCorrect(){
+  correctSound.currentTime = 0;
+  correctSound.play();
+}
+
+function playWrong(){
+  wrongSound.currentTime = 0;
+  wrongSound.play();
+}
 let words = JSON.parse(localStorage.getItem("words") || "{}");
 
 function saveWords(){
@@ -488,7 +524,7 @@ function speak(text){
 // =====================
 
 function checkAnswer(){
-
+ unlockAudioOnce();
  let ans=document.getElementById("answer").value;
 
  let correct=words[currentJP].ru;
@@ -498,7 +534,7 @@ function checkAnswer(){
 }
 
 function selectAnswer(ans){
-
+ unlockAudioOnce();
  let correct=currentJP;
 
  judge(ans,correct);
@@ -508,7 +544,7 @@ function selectAnswer(ans){
 function judge(ans,correct){
 
  if(ans.trim().toLowerCase()==correct.toLowerCase()){
-
+  playCorrect();
   alert("正解");
 
   words[currentJP].correct++;
@@ -520,7 +556,7 @@ function judge(ans,correct){
  }
 
  else{
-
+  playWrong();
   alert("不正解 正解:"+correct);
 
   words[currentJP].wrong++;
@@ -547,6 +583,7 @@ showMenu("add");
 
 </body>
 </html>
+
 
 
 
