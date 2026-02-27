@@ -1,45 +1,418 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>格変化 穴埋め</title>
-<link rel="stylesheet" href="style.css"> <!-- 同じ冬デザイン使える -->
+
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+
+<style>
+/* index.html と同系統の冬テーマ */
+body{
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  margin:0;
+  padding:20px;
+  background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+  color:white;
+  min-height:100vh;
+}
+.container{ max-width:700px; margin:auto; }
+h1{ text-align:center; margin: 10px 0 20px; }
+.menu{ text-align:center; margin-bottom:15px; }
+button{
+  margin:5px;
+  padding:12px;
+  font-size:16px;
+  border:none;
+  border-radius:10px;
+  background:rgba(255,255,255,0.15);
+  color:white;
+  backdrop-filter:blur(10px);
+}
+button:hover{ background:rgba(255,255,255,0.3); }
+select{
+  margin:5px;
+  padding:10px;
+  font-size:16px;
+  border-radius:10px;
+  border:none;
+}
+.card{
+  background:rgba(255,255,255,0.1);
+  padding:18px;
+  margin:10px 0;
+  border-radius:15px;
+  backdrop-filter:blur(15px);
+  box-shadow:0 0 20px rgba(0,0,0,0.35);
+}
+.small{ opacity:0.85; font-size:13px; }
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+  overflow:hidden;
+  border-radius:12px;
+}
+th, td{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,0.15);
+  vertical-align:middle;
+}
+th{
+  text-align:center;
+  font-weight:700;
+  background:rgba(255,255,255,0.08);
+}
+td.case{
+  width:95px;
+  font-weight:700;
+  white-space:nowrap;
+}
+input.cell{
+  width:95%;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
+}
+.ok{ color:#8cffc1; text-shadow:0 0 10px rgba(140,255,193,0.5); }
+.ng{ color:#ff9aa2; text-shadow:0 0 10px rgba(255,154,162,0.5); }
+hr{ border:none; border-top:1px solid rgba(255,255,255,0.15); margin:12px 0; }
+</style>
 </head>
+
 <body>
 <div class="container">
 
   <h1>❄️ 格変化 穴埋め</h1>
 
-  <div class="card">
-    <div id="prompt">名詞 "стол"（机） 単数</div>
-
-    <table style="width:100%; margin-top:10px;">
-      <tr><td>主格</td><td>стол</td></tr>
-      <tr><td>生格</td><td><input id="gen" placeholder="例: стола"></td></tr>
-      <tr><td>与格</td><td><input id="dat" placeholder="例: столу"></td></tr>
-    </table>
-
-    <button onclick="check()">答え合わせ</button>
-    <div id="result"></div>
+  <div class="menu">
+    <button onclick="location.href='index.html'">← 戻る</button>
+    <button onclick="newQuestion()">次の問題</button>
+    <button onclick="checkAll()">答え合わせ</button>
   </div>
 
-  <button onclick="location.href='index.html'">← 戻る</button>
+  <div class="card">
+    <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center;">
+      <span class="small">問題セット：</span>
+      <select id="setSelect" onchange="newQuestion()">
+        <option value="adj">形容詞（красивый/молодой/синий）</option>
+        <option value="poss">所有代名詞（мой/наш）</option>
+        <option value="demo">指示代名詞（этот）</option>
+        <option value="pers">人称代名詞（я/ты/он/оно/она）</option>
+        <option value="plur">人称代名詞（複数：мы/вы/они）</option>
+        <option value="q">疑問詞（что/кто）</option>
+      </select>
+    </div>
+
+    <hr>
+
+    <div id="prompt" style="font-weight:800; text-align:center;">（ここに問題タイトル）</div>
+    <div class="small" style="text-align:center; margin-top:6px;">
+      主格だけ表示。ほか全部を埋めてね（対格は「不活/活」を両方）
+    </div>
+
+    <div id="tableArea"></div>
+
+    <div id="result" style="margin-top:10px; text-align:center;"></div>
+  </div>
 
 </div>
 
 <script>
-const answer = { gen:"стола", dat:"столу" };
+// ====== 共通：表の定義 ======
+// 形式：
+// {
+//   id: "...",
+//   title: "...",
+//   headers: ["", "男性形", "中性形", ...],
+//   rows: [
+//     { key:"nom", label:"主格", values:[...], lock:true },
+//     { key:"gen", label:"生格", values:[...], lock:false },
+//     ...
+//   ],
+//   // checkで許容する別解を入れたいとき：alts: { "ins:f": ["A","B"] } みたいな
+//   alts: {}
+// }
 
-function check(){
-  const gen = document.getElementById("gen").value.trim();
-  const dat = document.getElementById("dat").value.trim();
+const CASES_6 = [
+  {key:"nom", label:"主格"},
+  {key:"gen", label:"生格"},
+  {key:"dat", label:"与格"},
+  {key:"acc_in", label:"対格(不活)"},
+  {key:"acc_an", label:"対格(活)"},
+  {key:"ins", label:"造格"},
+  {key:"pre", label:"前置格"},
+];
 
-  let ok = (gen === answer.gen && dat === answer.dat);
+// ====== 問題データ（画像の表に合わせた形） ======
+const DATA = {
 
-  document.getElementById("result").innerText =
-    ok ? "⭕ 正解！" : `❌ 正解は 生格:${answer.gen} 与格:${answer.dat}`;
+  adj: [
+    {
+      id:"adj_krasivy",
+      title:"【硬変化】形容詞「красивый（美しい）」",
+      headers:["", "男性形", "中性形", "女性形", "複数形"],
+      rows:[
+        {key:"nom", label:"主格", values:["краси́вый","краси́вое","краси́вая","краси́вые"], lock:true},
+        {key:"gen", label:"生格", values:["краси́вого","краси́вого","краси́вой","краси́вых"]},
+        {key:"dat", label:"与格", values:["краси́вому","краси́вому","краси́вой","краси́вым"]},
+        {key:"acc_in", label:"対格(不活)", values:["краси́вый","краси́вое","краси́вую","краси́вые"]},
+        {key:"acc_an", label:"対格(活)",   values:["краси́вого","краси́вое","краси́вую","краси́вых"]},
+        {key:"ins", label:"造格", values:["краси́вым","краси́вым","краси́вой","краси́выми"]},
+        {key:"pre", label:"前置格", values:["краси́вом","краси́вом","краси́вой","краси́вых"]},
+      ],
+      alts:{}
+    },
+    {
+      id:"adj_molodoy",
+      title:"【硬変化（語尾アクセント型）】形容詞「молодо́й（若い）」",
+      headers:["", "男性形", "中性形", "女性形", "複数形"],
+      rows:[
+        {key:"nom", label:"主格", values:["молодо́й","молодо́е","молода́я","молоды́е"], lock:true},
+        {key:"gen", label:"生格", values:["молодо́го","молодо́го","молодо́й","молоды́х"]},
+        {key:"dat", label:"与格", values:["молодо́му","молодо́му","молодо́й","молоды́м"]},
+        {key:"acc_in", label:"対格(不活)", values:["молодо́й","молодо́е","молоду́ю","молоды́е"]},
+        {key:"acc_an", label:"対格(活)",   values:["молодо́го","молодо́е","молоду́ю","молоды́х"]},
+        {key:"ins", label:"造格", values:["молоды́м","молоды́м","молодо́й","молоды́ми"]},
+        {key:"pre", label:"前置格", values:["молодо́м","молодо́м","молодо́й","молоды́х"]},
+      ],
+      alts:{}
+    },
+    {
+      id:"adj_siniy",
+      title:"【軟変化】形容詞「си́ний（青い）」",
+      headers:["", "男性形", "中性形", "女性形", "複数形"],
+      rows:[
+        {key:"nom", label:"主格", values:["си́ний","си́нее","си́няя","си́ние"], lock:true},
+        {key:"gen", label:"生格", values:["си́него","си́него","си́ней","си́них"]},
+        {key:"dat", label:"与格", values:["си́нему","си́нему","си́ней","си́ним"]},
+        {key:"acc_in", label:"対格(不活)", values:["си́ний","си́нее","си́нюю","си́ние"]},
+        {key:"acc_an", label:"対格(活)",   values:["си́него","си́нее","си́нюю","си́них"]},
+        {key:"ins", label:"造格", values:["си́ним","си́ним","си́нею","си́ними"]},
+        {key:"pre", label:"前置格", values:["си́нем","си́нем","си́ней","си́них"]},
+      ],
+      // 造格(女性)は「си́ней」も許容したいならここに追加
+      alts:{ "ins:2": ["си́ней","си́нею"] } // 2=女性形列
+    },
+  ],
+
+  poss: [
+    {
+      id:"poss_moy",
+      title:"所有代名詞「мо́й（私の）」※ твой/свой も同語尾",
+      headers:["", "男性形", "中性形", "女性形", "複数形"],
+      rows:[
+        {key:"nom", label:"主格", values:["мо́й","моё","моя́","мои́"], lock:true},
+        {key:"gen", label:"生格", values:["моего́","моего́","мое́й","мои́х"]},
+        {key:"dat", label:"与格", values:["моему́","моему́","мое́й","мои́м"]},
+        {key:"acc_in", label:"対格(不活)", values:["мо́й","моё","мою́","мои́"]},
+        {key:"acc_an", label:"対格(活)",   values:["моего́","моё","мою́","мои́х"]},
+        {key:"ins", label:"造格", values:["мои́м","мои́м","мое́й","мои́ми"]},
+        {key:"pre", label:"前置格", values:["моём","моём","мое́й","мои́х"]},
+      ],
+      alts:{}
+    },
+    {
+      id:"poss_nash",
+      title:"所有代名詞「на́ш（私たちの）」※ ваш も同語尾",
+      headers:["", "男性形", "中性形", "女性形", "複数形"],
+      rows:[
+        {key:"nom", label:"主格", values:["на́ш","на́ше","на́ша","на́ши"], lock:true},
+        {key:"gen", label:"生格", values:["на́шего","на́шего","на́шей","на́ших"]},
+        {key:"dat", label:"与格", values:["на́шему","на́шему","на́шей","на́шим"]},
+        {key:"acc_in", label:"対格(不活)", values:["на́ш","на́ше","на́шу","на́ши"]},
+        {key:"acc_an", label:"対格(活)",   values:["на́шего","на́ше","на́шу","на́ших"]},
+        {key:"ins", label:"造格", values:["на́шим","на́шим","на́шей","на́шими"]},
+        {key:"pre", label:"前置格", values:["на́шем","на́шем","на́шей","на́ших"]},
+      ],
+      alts:{}
+    },
+  ],
+
+  demo: [
+    {
+      id:"demo_etot",
+      title:"指示代名詞「э́тот（この）」",
+      headers:["", "男性形", "中性形", "女性形", "複数形"],
+      rows:[
+        {key:"nom", label:"主格", values:["э́тот","э́то","э́та","э́ти"], lock:true},
+        {key:"gen", label:"生格", values:["э́того","э́того","э́той","э́тих"]},
+        {key:"dat", label:"与格", values:["э́тому","э́тому","э́той","э́тим"]},
+        {key:"acc_in", label:"対格(不活)", values:["э́тот","э́то","э́ту","э́ти"]},
+        {key:"acc_an", label:"対格(活)",   values:["э́того","э́то","э́ту","э́тих"]},
+        {key:"ins", label:"造格", values:["э́тим","э́тим","э́той","э́тими"]},
+        {key:"pre", label:"前置格", values:["э́том","э́том","э́той","э́тих"]},
+      ],
+      alts:{}
+    }
+  ],
+
+  pers: [
+    {
+      id:"pers_sg",
+      title:"人称代名詞（単数）※（）は前置詞と一緒の形",
+      headers:["", "私", "君", "彼", "それ", "彼女"],
+      rows:[
+        {key:"nom", label:"主格", values:["я","ты","он","оно́","она́"], lock:true},
+        {key:"gen", label:"生格", values:["меня́","тебя́","его́ (него́)","его́ (него́)","её (неё)"]},
+        {key:"dat", label:"与格", values:["мне","тебе́","ему́ (нему́)","ему́ (нему́)","е́й (не́й)"]},
+        {key:"acc_in", label:"対格", values:["меня́","тебя́","его́ (него́)","его́ (него́)","её (неё)"]},
+        {key:"ins", label:"造格", values:["мно́й","тобо́й","и́м (ни́м)","и́м (ни́м)","е́й (не́й)"]},
+        {key:"pre", label:"前置格", values:["мне","тебе́","нём","нём","не́й"]},
+      ],
+      alts:{}
+    }
+  ],
+
+  plur: [
+    {
+      id:"pers_pl",
+      title:"人称代名詞（複数）※（）は前置詞と一緒の形",
+      headers:["", "私たち", "あなた/君たち", "彼ら/それら"],
+      rows:[
+        {key:"nom", label:"主格", values:["мы́","вы́","они́"], lock:true},
+        {key:"gen", label:"生格", values:["нас","вас","их (ни́х)"]},
+        {key:"dat", label:"与格", values:["нам","вам","и́м (ни́м)"]},
+        {key:"acc_in", label:"対格", values:["нас","вас","их (ни́х)"]},
+        {key:"ins", label:"造格", values:["на́ми","ва́ми","и́ми (ни́ми)"]},
+        {key:"pre", label:"前置格", values:["нас","вас","ни́х"]},
+      ],
+      alts:{}
+    }
+  ],
+
+  q: [
+    {
+      id:"q_words",
+      title:"疑問詞「что́（何） / кто́（誰）」",
+      headers:["", "что́（何）", "кто́（誰）"],
+      rows:[
+        {key:"nom", label:"主格", values:["что́","кто́"], lock:true},
+        {key:"gen", label:"生格", values:["чего́","кого́"]},
+        {key:"dat", label:"与格", values:["чему́","кому́"]},
+        {key:"acc_in", label:"対格", values:["что́","кого́"]},
+        {key:"ins", label:"造格", values:["че́м","ке́м"]},
+        {key:"pre", label:"前置格", values:["чём","ко́м"]},
+      ],
+      alts:{}
+    }
+  ],
+};
+
+// ====== 状態 ======
+let current = null;
+
+// ====== 表を描画 ======
+function renderQuestion(q){
+  current = q;
+  document.getElementById("prompt").innerText = q.title;
+
+  const area = document.getElementById("tableArea");
+
+  // 表ヘッダ
+  let html = `<table><tr>`;
+  for(const h of q.headers){
+    html += `<th>${h}</th>`;
+  }
+  html += `</tr>`;
+
+  // 各行
+  q.rows.forEach(row => {
+    html += `<tr>`;
+    html += `<td class="case">${row.label}</td>`;
+
+    row.values.forEach((val, colIdx) => {
+      const id = `${row.key}__${colIdx}`;
+
+      if(row.key === "nom"){ // 主格は表示のみ
+        html += `<td><b>${val}</b></td>`;
+      } else {
+        html += `<td><input class="cell" id="${id}" placeholder="ここに入力"></td>`;
+      }
+    });
+
+    html += `</tr>`;
+  });
+
+  html += `</table>`;
+  area.innerHTML = html;
+
+  document.getElementById("result").innerText = "";
 }
+
+// ====== 答え合わせ ======
+function normalize(s){
+  return (s || "").trim();
+}
+
+function isCorrect(rowKey, colIdx, userValue, correctValue, alts){
+  const u = normalize(userValue);
+  const c = normalize(correctValue);
+
+  if(u === c) return true;
+
+  // 別解許容（例：си́ней/си́нею）
+  const altKey = `${rowKey}:${colIdx}`;
+  if(alts && alts[altKey]){
+    return alts[altKey].some(v => normalize(v) === u);
+  }
+  return false;
+}
+
+function checkAll(){
+  if(!current) return;
+
+  let total = 0;
+  let ok = 0;
+
+  for(const row of current.rows){
+    if(row.key === "nom") continue;
+
+    row.values.forEach((correctVal, colIdx) => {
+      const id = `${row.key}__${colIdx}`;
+      const input = document.getElementById(id);
+      if(!input) return;
+
+      total++;
+      const good = isCorrect(row.key, colIdx, input.value, correctVal, current.alts);
+
+      if(good){
+        ok++;
+        input.style.outline = "2px solid rgba(140,255,193,0.9)";
+      } else {
+        input.style.outline = "2px solid rgba(255,154,162,0.95)";
+      }
+    });
+  }
+
+  const res = document.getElementById("result");
+  if(ok === total){
+    res.innerHTML = `<span class="ok">⭕ 全問正解！ (${ok}/${total})</span>`;
+  } else {
+    res.innerHTML = `<span class="ng">❌ まだミスあり (${ok}/${total})</span><div class="small" style="margin-top:6px;">赤枠が間違い。もう一回いこ</div>`;
+  }
+}
+
+// ====== 次の問題（ランダム） ======
+function pickRandom(arr){
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function newQuestion(){
+  const set = document.getElementById("setSelect").value;
+
+  const pool = DATA[set];
+  if(!pool || pool.length === 0) return;
+
+  const q = pickRandom(pool);
+  renderQuestion(q);
+}
+
+// 初期表示
+newQuestion();
 </script>
 
 </body>
