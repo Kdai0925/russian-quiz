@@ -154,10 +154,6 @@ window.speechSynthesis.onvoiceschanged = function() {
  speechSynthesis.getVoices();
 };
 
- 
-// =====================
-// データ
-// =====================
 // =====================
 // 効果音（iOS対策込み）
 // =====================
@@ -195,6 +191,10 @@ function playWrong(){
   wrongSound.currentTime = 0;
   wrongSound.play();
 }
+
+// =====================
+// データ
+// =====================
 let words = JSON.parse(localStorage.getItem("words") || "{}");
 
 function saveWords(){
@@ -583,6 +583,7 @@ showMenu("add");
 
 </body>
 </html>
+
 
 
 
