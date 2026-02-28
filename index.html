@@ -124,28 +124,68 @@ input{
   opacity:0.85;
   margin-top:2px;
 }
+/* ===== 横スクロールタブ（メルカリ風） ===== */
+.tabbar{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling: touch;
+  padding:6px 6px 10px;
+  margin-bottom:14px;
+
+  /* スクロールバーを目立たせない */
+  scrollbar-width: none;      /* Firefox */
+}
+.tabbar::-webkit-scrollbar{
+  display:none;               /* iOS/Safari */
+}
+
+.tab{
+  flex: 0 0 auto;             /* 横に伸びず、項目ごとに並ぶ */
+  background:transparent;
+  border:none;
+  color: rgba(255,255,255,0.7);
+  font-size:16px;
+  padding:10px 4px;
+  border-radius:0;
+  position:relative;
+}
+
+.tab.active{
+  color:white;
+  font-weight:800;
+}
+
+.tab.active::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-2px;
+  height:3px;
+  border-radius:3px;
+  background: rgba(255,255,255,0.9); /* メルカリの赤線っぽい下線 */
+}
 </style>
 
 </head>
 <body>
 
-<div class="container">
+<div class="tabbar" id="tabbar">
 
-  <h1>ロシア語学習</h1>
+  <button class="tab" data-tab="add" onclick="selectTab('add')">単語追加</button>
+  <button class="tab" data-tab="list" onclick="selectTab('list')">単語一覧</button>
+  <button class="tab" data-tab="jp_ru" onclick="selectTab('jp_ru')">日→露</button>
+  <button class="tab" data-tab="ru_jp" onclick="selectTab('ru_jp')">露→日</button>
 
-  <div class="menu">
+  <button class="tab" data-tab="motion" onclick="location.href='motion.html'">人称変化</button>
+  <button class="tab" data-tab="export" onclick="exportWords()">エクスポート</button>
 
-    <button onclick="showMenu('add')">単語追加</button>
-    <button onclick="showMenu('list')">単語一覧</button>
-    <button onclick="showMenu('jp_ru')">日→露</button>
-    <button onclick="showMenu('ru_jp')">露→日</button>
-    <button onclick="location.href='declension.html'">格変化</button>
-    <button onclick="exportWords()">エクスポート</button>
-    <input type="file" onchange="importWords(event)">
-    
-  </div>
-
-  <div id="app"></div>
+  <!-- ファイル選択は見た目を揃えるためラベル化（任意） -->
+  <label class="tab" style="cursor:pointer;">
+    インポート
+    <input type="file" onchange="importWords(event)" style="display:none;">
+  </label>
 
 </div>
 
@@ -208,7 +248,16 @@ function importWords(event){
 // =====================
 // メニュー
 // =====================
+function setActiveTab(tabKey){
+  document.querySelectorAll(".tab").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.tab === tabKey);
+  });
+}
 
+function selectTab(tabKey){
+  setActiveTab(tabKey);
+  showMenu(tabKey);   // 既存の表示切替をそのまま使う
+}
 function showMenu(menu){
 
  let app = document.getElementById("app");
@@ -542,12 +591,13 @@ function judge(ans,correct){
 // 初期表示
 // =====================
 
-showMenu("add");
+selectTab("add");
 
 </script>
 
 </body>
 </html>
+
 
 
 
