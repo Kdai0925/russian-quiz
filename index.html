@@ -1,102 +1,62 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>ロシア語学習</title>
 
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 
 <style>
-
 body{
-
- font-family: -apple-system, BlinkMacSystemFont, sans-serif;
- margin:0;
- padding:20px;
-
- background:
- linear-gradient(to bottom,
- #0f2027,
- #203a43,
- #2c5364);
-
- color:white;
-
- min-height:100vh;
-
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  margin:0;
+  padding:20px;
+  background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+  color:white;
+  min-height:100vh;
 }
 
 .container{
-
- max-width:500px;
- margin:auto;
-
+  max-width:500px;
+  margin:auto;
 }
 
 h1{
-
- text-align:center;
- margin-bottom:20px;
-
-}
-
-.menu{
-
- text-align:center;
- margin-bottom:20px;
-
+  text-align:center;
+  margin: 10px 0 16px;
 }
 
 button{
-
- margin:5px;
- padding:12px;
- font-size:16px;
-
- border:none;
- border-radius:10px;
-
- background:rgba(255,255,255,0.15);
- color:white;
-
- backdrop-filter:blur(10px);
-
+  margin:5px;
+  padding:12px;
+  font-size:16px;
+  border:none;
+  border-radius:10px;
+  background:rgba(255,255,255,0.15);
+  color:white;
+  backdrop-filter:blur(10px);
 }
-
 button:hover{
-
- background:rgba(255,255,255,0.3);
-
+  background:rgba(255,255,255,0.3);
 }
 
 input{
-
- padding:10px;
- font-size:16px;
- margin:5px;
-
- border-radius:8px;
- border:none;
-
+  padding:10px;
+  font-size:16px;
+  margin:5px;
+  border-radius:8px;
+  border:none;
 }
 
 .card{
-
- background:rgba(255,255,255,0.1);
-
- padding:20px;
- margin:10px;
-
- border-radius:15px;
-
- backdrop-filter:blur(15px);
-
- box-shadow:0 0 20px rgba(0,0,0,0.4);
-
+  background:rgba(255,255,255,0.1);
+  padding:20px;
+  margin:10px 0;
+  border-radius:15px;
+  backdrop-filter:blur(15px);
+  box-shadow:0 0 20px rgba(0,0,0,0.4);
 }
 
 .word-row{
@@ -109,21 +69,10 @@ input{
   border-radius:12px;
   background: rgba(255,255,255,0.06);
 }
+.word-text{ text-align:left; flex:1; }
+.word-main{ font-weight:600; }
+.word-sub{ font-size:13px; opacity:0.85; margin-top:2px; }
 
-.word-text{
-  text-align:left;
-  flex:1;
-}
-
-.word-main{
-  font-weight:600;
-}
-
-.word-sub{
-  font-size:13px;
-  opacity:0.85;
-  margin-top:2px;
-}
 /* ===== 横スクロールタブ（メルカリ風） ===== */
 .tabbar{
   display:flex;
@@ -132,16 +81,12 @@ input{
   -webkit-overflow-scrolling: touch;
   padding:6px 6px 10px;
   margin-bottom:14px;
-
-  /* スクロールバーを目立たせない */
-  scrollbar-width: none;      /* Firefox */
+  scrollbar-width: none;
 }
-.tabbar::-webkit-scrollbar{
-  display:none;               /* iOS/Safari */
-}
+.tabbar::-webkit-scrollbar{ display:none; }
 
 .tab{
-  flex: 0 0 auto;             /* 横に伸びず、項目ごとに並ぶ */
+  flex:0 0 auto;
   background:transparent;
   border:none;
   color: rgba(255,255,255,0.7);
@@ -149,13 +94,12 @@ input{
   padding:10px 4px;
   border-radius:0;
   position:relative;
+  margin:0;              /* buttonのmarginを打ち消す */
 }
-
 .tab.active{
   color:white;
   font-weight:800;
 }
-
 .tab.active::after{
   content:"";
   position:absolute;
@@ -164,89 +108,85 @@ input{
   bottom:-2px;
   height:3px;
   border-radius:3px;
-  background: rgba(255,255,255,0.9); /* メルカリの赤線っぽい下線 */
+  background: rgba(255,255,255,0.9);
 }
 </style>
-
 </head>
+
 <body>
+<div class="container">
 
-<div class="tabbar" id="tabbar">
+  <h1>ロシア語学習</h1>
 
-  <button class="tab" data-tab="add" onclick="selectTab('add')">単語追加</button>
-  <button class="tab" data-tab="list" onclick="selectTab('list')">単語一覧</button>
-  <button class="tab" data-tab="jp_ru" onclick="selectTab('jp_ru')">日→露</button>
-  <button class="tab" data-tab="ru_jp" onclick="selectTab('ru_jp')">露→日</button>
+  <div class="tabbar" id="tabbar">
+    <button class="tab" data-tab="add"   onclick="selectTab('add')">単語追加</button>
+    <button class="tab" data-tab="list"  onclick="selectTab('list')">単語一覧</button>
+    <button class="tab" data-tab="jp_ru" onclick="selectTab('jp_ru')">日→露</button>
+    <button class="tab" data-tab="ru_jp" onclick="selectTab('ru_jp')">露→日</button>
 
-  <button class="tab" data-tab="motion" onclick="location.href='motion.html'">人称変化</button>
-  <button class="tab" data-tab="export" onclick="exportWords()">エクスポート</button>
+    <!-- ✅ ここ復活：格変化ページ -->
+    <button class="tab" data-tab="declension" onclick="location.href='declension.html'">格変化</button>
 
-  <!-- ファイル選択は見た目を揃えるためラベル化（任意） -->
-  <label class="tab" style="cursor:pointer;">
-    インポート
-    <input type="file" onchange="importWords(event)" style="display:none;">
-  </label>
+    <!-- ✅ ここ復活：人称変化ページ -->
+    <button class="tab" data-tab="motion" onclick="location.href='motion.html'">人称変化</button>
+
+    <button class="tab" data-tab="export" onclick="exportWords()">エクスポート</button>
+
+    <label class="tab" style="cursor:pointer;">
+      インポート
+      <input type="file" onchange="importWords(event)" style="display:none;">
+    </label>
+  </div>
+
+  <!-- ✅ これが無いと中身が表示されない -->
+  <div id="app"></div>
 
 </div>
 
 <script>
 // 音声エンジン初期化（iOS対策）
 window.speechSynthesis.onvoiceschanged = function() {
- speechSynthesis.getVoices();
+  speechSynthesis.getVoices();
 };
 
- 
 // =====================
 // データ
 // =====================
-
 let words = JSON.parse(localStorage.getItem("words") || "{}");
 
 function saveWords(){
- localStorage.setItem("words", JSON.stringify(words));
+  localStorage.setItem("words", JSON.stringify(words));
 }
 
 // =====================
 // バックアップ機能
 // =====================
-
 function exportWords(){
-
- let data = JSON.stringify(words, null, 2);
-
- let blob = new Blob([data], {type:"application/json"});
-
- let url = URL.createObjectURL(blob);
-
- let a = document.createElement("a");
- a.href = url;
- a.download = "words_backup.json";
- a.click();
-
+  let data = JSON.stringify(words, null, 2);
+  let blob = new Blob([data], {type:"application/json"});
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = "words_backup.json";
+  a.click();
 }
 
 function importWords(event){
+  let file = event.target.files[0];
+  if(!file) return;
 
- let file = event.target.files[0];
-
- let reader = new FileReader();
-
- reader.onload = function(){
-
-  words = JSON.parse(reader.result);
-
-  saveWords();
-
-  alert("復元完了");
-
- };
-
- reader.readAsText(file);
-
+  let reader = new FileReader();
+  reader.onload = function(){
+    words = JSON.parse(reader.result);
+    saveWords();
+    alert("復元完了");
+    selectTab("list"); // 復元したら一覧へ
+  };
+  reader.readAsText(file);
 }
 
 // =====================
-// メニュー
+// タブ
 // =====================
 function setActiveTab(tabKey){
   document.querySelectorAll(".tab").forEach(btn=>{
@@ -256,348 +196,237 @@ function setActiveTab(tabKey){
 
 function selectTab(tabKey){
   setActiveTab(tabKey);
-  showMenu(tabKey);   // 既存の表示切替をそのまま使う
+  // index内で表示を切り替えるタブだけshowMenuする
+  if(["add","list","jp_ru","ru_jp"].includes(tabKey)){
+    showMenu(tabKey);
+  }
 }
+
+// =====================
+// メニュー描画
+// =====================
 function showMenu(menu){
+  let app = document.getElementById("app");
+  if(!app) return;
 
- let app = document.getElementById("app");
-
- if(menu=="add"){
-
-  app.innerHTML=`
-
-<div class="card">
-
-日本語<br>
-<input id="jp"><br>
-
-ロシア語<br>
-<input id="ru"><br>
-
-<button onclick="addWord()">保存</button>
-
-</div>
-
-`;
-
- }
-if(menu=="list"){
-
-  let html = "<div class='card'><h3>登録単語一覧</h3>";
-
-  const keys = Object.keys(words);
-
-  if(keys.length === 0){
-    html += "<p>単語が登録されていません</p>";
-  } else {
-    for(const jp of keys){
-      const ru = words[jp].ru;
-      const lv = words[jp].level;
-
-      html += `
-        <div class="word-row">
-          <div class="word-text">
-            <div class="word-main">${jp} → ${ru}</div>
-            <div class="word-sub">Lv.${lv}</div>
-          </div>
-          <button class="del-btn" data-jp="${encodeURIComponent(jp)}">削除</button>
-        </div>
-      `;
-    }
+  if(menu=="add"){
+    app.innerHTML=`
+      <div class="card">
+        日本語<br>
+        <input id="jp"><br>
+        ロシア語<br>
+        <input id="ru"><br>
+        <button onclick="addWord()">保存</button>
+      </div>
+    `;
   }
 
-  html += "</div>";
+  if(menu=="list"){
+    let html = "<div class='card'><h3>登録単語一覧</h3>";
+    const keys = Object.keys(words);
 
-  app.innerHTML = html;
+    if(keys.length === 0){
+      html += "<p>単語が登録されていません</p>";
+    } else {
+      for(const jp of keys){
+        const ru = words[jp].ru;
+        const lv = words[jp].level;
 
-  // ✅ ここが重要：一覧を描画した後にイベントを付ける
-  document.querySelectorAll(".del-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const jp = decodeURIComponent(btn.dataset.jp);
-      deleteWord(jp);
+        html += `
+          <div class="word-row">
+            <div class="word-text">
+              <div class="word-main">${jp} → ${ru}</div>
+              <div class="word-sub">Lv.${lv}</div>
+            </div>
+            <button class="del-btn" data-jp="${encodeURIComponent(jp)}">削除</button>
+          </div>
+        `;
+      }
+    }
+
+    html += "</div>";
+    app.innerHTML = html;
+
+    // 一覧描画後にイベント付与
+    document.querySelectorAll(".del-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const jp = decodeURIComponent(btn.dataset.jp);
+        deleteWord(jp);
+      });
     });
-  });
-}
- 
+  }
 
- if(menu=="jp_ru"){
-  newQuestion("jp_ru");
- }
+  if(menu=="jp_ru"){
+    newQuestion("jp_ru");
+  }
 
- if(menu=="ru_jp"){
-  newQuestion("ru_jp");
- }
-
+  if(menu=="ru_jp"){
+    newQuestion("ru_jp");
+  }
 }
 
 // =====================
-// 単語追加
+// 単語追加/削除
 // =====================
-
 function addWord(){
+  let jp=document.getElementById("jp").value.trim();
+  let ru=document.getElementById("ru").value.trim();
+  if(!jp || !ru){
+    alert("日本語とロシア語を入力してください");
+    return;
+  }
 
- let jp=document.getElementById("jp").value;
- let ru=document.getElementById("ru").value;
+  words[jp]={
+    ru:ru,
+    level:0,
+    correct:0,
+    wrong:0
+  };
 
- words[jp]={
-
-  ru:ru,
-  level:0,
-  correct:0,
-  wrong:0
-
- };
-
- saveWords();
-
- alert("保存");
-
+  saveWords();
+  alert("保存");
 }
 
 function deleteWord(jp){
-
   if(!confirm(`「${jp}」を削除しますか？`)) return;
-
   delete words[jp];
-
   saveWords();
-
-  // 一覧を更新
   showMenu("list");
 }
 
-function deleteWord(jp){
-
-  if(!confirm(`「${jp}」を削除しますか？`)) return;
-
-  delete words[jp];
-
-  saveWords();
-
-  showMenu("list");
-} 
 // =====================
 // 重み付き選択
 // =====================
-
 function weightedChoice(){
-
- let pool=[];
-
- for(let jp in words){
-
-  let weight=5-words[jp].level;
-
-  for(let i=0;i<weight;i++){
-   pool.push(jp);
+  let pool=[];
+  for(let jp in words){
+    let weight=5-words[jp].level;
+    for(let i=0;i<weight;i++) pool.push(jp);
   }
-
- }
-
- return pool[Math.floor(Math.random()*pool.length)];
-
+  return pool[Math.floor(Math.random()*pool.length)];
 }
 
 // =====================
 // 問題
 // =====================
-
 let currentJP="";
 let mode="";
 
 function newQuestion(m){
+  mode=m;
 
- mode=m;
-
- currentJP=weightedChoice();
-
- let ru=words[currentJP].ru;
-
- let app=document.getElementById("app");
-
- if(m=="jp_ru"){
-
-  app.innerHTML=`
-
-<div class="card">
-
-問題: ${currentJP}<br>
-
-<input id="answer"><br>
-
-<div id="keyboard"></div>
-
-<button onclick="checkAnswer()">回答</button>
-
-</div>
-`;
-
- showKeyboard();
-
- }
-
- if(m=="ru_jp"){
-
-  let choices=[currentJP];
-
-  let keys=Object.keys(words);
-
-  while(choices.length<4){
-
-   let fake=keys[Math.floor(Math.random()*keys.length)];
-
-   if(!choices.includes(fake)){
-    choices.push(fake);
-   }
-
+  const keys = Object.keys(words);
+  if(keys.length < 4){
+    document.getElementById("app").innerHTML =
+      `<div class="card">単語を4つ以上登録してください</div>`;
+    return;
   }
 
-  choices.sort(()=>Math.random()-0.5);
+  currentJP=weightedChoice();
+  let ru=words[currentJP].ru;
+  let app=document.getElementById("app");
 
-  let html=`<div class="card">
-
-問題: ${ru}
-<button onclick="speak('${ru}')">🔊</button>
-<br>
-
-`;
-
-  for(let c of choices){
-
-   html+=`<button onclick="selectAnswer('${c}')">${c}</button><br>`;
-
+  if(m=="jp_ru"){
+    app.innerHTML=`
+      <div class="card">
+        問題: ${currentJP}<br>
+        <input id="answer"><br>
+        <div id="keyboard"></div>
+        <button onclick="checkAnswer()">回答</button>
+      </div>
+    `;
+    showKeyboard();
   }
 
-  html+="</div>";
+  if(m=="ru_jp"){
+    let choices=[currentJP];
+    while(choices.length<4){
+      let fake=keys[Math.floor(Math.random()*keys.length)];
+      if(!choices.includes(fake)) choices.push(fake);
+    }
+    choices.sort(()=>Math.random()-0.5);
 
-  app.innerHTML=html;
-
- }
-
+    let html=`<div class="card">
+      問題: ${ru}
+      <button onclick="speak('${ru}')">🔊</button><br>
+    `;
+    for(let c of choices){
+      html+=`<button onclick="selectAnswer('${c}')">${c}</button><br>`;
+    }
+    html+="</div>";
+    app.innerHTML=html;
+  }
 }
 
 // =====================
 // キーボード
 // =====================
-
 function showKeyboard(){
-
- let letters="абвгдеёжзийклмнопрстуфхцчшщыьэюя";
-
- let html="";
-
- for(let l of letters){
-
-  html+=`<button onclick="addLetter('${l}')">${l}</button>`;
-
- }
-
- document.getElementById("keyboard").innerHTML=html;
-
+  let letters="абвгдеёжзийклмнопрстуфхцчшщыьэюя";
+  let html="";
+  for(let l of letters){
+    html+=`<button onclick="addLetter('${l}')">${l}</button>`;
+  }
+  document.getElementById("keyboard").innerHTML=html;
 }
 
 function addLetter(l){
-
- let input=document.getElementById("answer");
-
- input.value+=l;
-
+  let input=document.getElementById("answer");
+  input.value+=l;
 }
 
 // 音声
 function speak(text){
-
- // iOS対策：一度cancel
- speechSynthesis.cancel();
-
- const voices = speechSynthesis.getVoices();
-
- let russianVoice = null;
-
- for(let v of voices){
-  if(v.lang.includes("ru")){
-   russianVoice = v;
-   break;
+  speechSynthesis.cancel();
+  const voices = speechSynthesis.getVoices();
+  let russianVoice = null;
+  for(let v of voices){
+    if(v.lang.includes("ru")){ russianVoice = v; break; }
   }
- }
-
- const utter = new SpeechSynthesisUtterance(text);
-
- utter.voice = russianVoice;
- utter.lang = "ru-RU";
- utter.rate = 0.9;
- utter.pitch = 1;
- utter.volume = 1;
-
- speechSynthesis.speak(utter);
-
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.voice = russianVoice;
+  utter.lang = "ru-RU";
+  utter.rate = 0.9;
+  utter.pitch = 1;
+  utter.volume = 1;
+  speechSynthesis.speak(utter);
 }
- 
+
 // =====================
 // 回答
 // =====================
-
 function checkAnswer(){
-
- let ans=document.getElementById("answer").value;
-
- let correct=words[currentJP].ru;
-
- judge(ans,correct);
-
+  let ans=document.getElementById("answer").value;
+  let correct=words[currentJP].ru;
+  judge(ans,correct);
 }
 
 function selectAnswer(ans){
-
- let correct=currentJP;
-
- judge(ans,correct);
-
+  let correct=currentJP;
+  judge(ans,correct);
 }
 
 function judge(ans,correct){
-
- if(ans.trim().toLowerCase()==correct.toLowerCase()){
-
-  alert("正解");
-
-  words[currentJP].correct++;
-
-  if(words[currentJP].level<4){
-   words[currentJP].level++;
+  if(ans.trim().toLowerCase()==correct.toLowerCase()){
+    alert("正解");
+    words[currentJP].correct++;
+    if(words[currentJP].level<4) words[currentJP].level++;
+  }else{
+    alert("不正解 正解:"+correct);
+    words[currentJP].wrong++;
+    if(words[currentJP].level>0) words[currentJP].level--;
   }
-
- }
-
- else{
-
-  alert("不正解 正解:"+correct);
-
-  words[currentJP].wrong++;
-
-  if(words[currentJP].level>0){
-   words[currentJP].level--;
-  }
-
- }
-
- saveWords();
-
- newQuestion(mode);
-
+  saveWords();
+  newQuestion(mode);
 }
 
 // =====================
 // 初期表示
 // =====================
-
 selectTab("add");
-
 </script>
-
 </body>
 </html>
-
 
 
 
