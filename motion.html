@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>移動動詞 現在形</title>
+
+<style>
+body{
+ font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+ margin:0;
+ padding:20px;
+ background:linear-gradient(to bottom,#0f2027,#203a43,#2c5364);
+ color:white;
+ min-height:100vh;
+}
+
+.container{ max-width:500px; margin:auto; }
+
+.card{
+ background:rgba(255,255,255,0.1);
+ padding:20px;
+ border-radius:15px;
+ backdrop-filter:blur(15px);
+ box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+
+table{
+ width:100%;
+ table-layout:fixed;
+ margin-top:15px;
+}
+
+td{
+ padding:8px;
+ text-align:center;
+}
+
+input{
+ width:100%;
+ padding:8px;
+ border-radius:6px;
+ border:none;
+ box-sizing:border-box;
+}
+
+button{
+ margin:5px;
+ padding:10px;
+ border:none;
+ border-radius:8px;
+ background:rgba(255,255,255,0.2);
+ color:white;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>🚶 移動動詞 現在形</h2>
+
+<div class="card">
+<div id="verbTitle"></div>
+
+<table>
+<tr>
+<td></td>
+<td>単数</td>
+<td>複数</td>
+</tr>
+
+<tr>
+<td>1人称</td>
+<td><input id="s1"></td>
+<td><input id="p1"></td>
+</tr>
+
+<tr>
+<td>2人称</td>
+<td><input id="s2"></td>
+<td><input id="p2"></td>
+</tr>
+
+<tr>
+<td>3人称</td>
+<td><input id="s3"></td>
+<td><input id="p3"></td>
+</tr>
+</table>
+
+<button onclick="check()">答え合わせ</button>
+<button onclick="next()">次の問題</button>
+
+<div id="result"></div>
+</div>
+
+</div>
+
+<script>
+
+// ==== アクセント除去 ====
+function normalize(s){
+ return (s||"")
+   .trim()
+   .normalize("NFD")
+   .replace(/[\u0301]/g,"")
+   .replace(/ё/g,"е").replace(/Ё/g,"Е")
+   .normalize("NFC");
+}
+
+// ==== 問題データ（写真2枚目以降より） ====
+
+const verbs = [
+
+{
+ infinitive:"идти",
+ forms:["иду","идёшь","идёт","идём","идёте","идут"]
+},
+
+{
+ infinitive:"ехать",
+ forms:["еду","едешь","едет","едем","едете","едут"]
+},
+
+{
+ infinitive:"плыть",
+ forms:["плыву","плывёшь","плывёт","плывём","плывёте","плывут"]
+},
+
+{
+ infinitive:"нести",
+ forms:["несу","несёшь","несёт","несём","несёте","несут"]
+},
+
+{
+ infinitive:"вести",
+ forms:["веду","ведёшь","ведёт","ведём","ведёте","ведут"]
+},
+
+{
+ infinitive:"лезть",
+ forms:["лезу","лезешь","лезет","лезем","лезете","лезут"]
+},
+
+{
+ infinitive:"ходить",
+ forms:["хожу","ходишь","ходит","ходим","ходите","ходят"]
+},
+
+{
+ infinitive:"ездить",
+ forms:["езжу","ездишь","ездит","ездим","ездите","ездят"]
+},
+
+{
+ infinitive:"лететь",
+ forms:["лечу","летишь","летит","летим","летите","летят"]
+},
+
+{
+ infinitive:"носить",
+ forms:["ношу","носишь","носит","носим","носите","носят"]
+}
+
+];
+
+let current = 0;
+
+function render(){
+ document.getElementById("verbTitle").innerText =
+  "不定形: " + verbs[current].infinitive;
+
+ ["s1","s2","s3","p1","p2","p3"].forEach(id=>{
+  document.getElementById(id).value="";
+ });
+
+ document.getElementById("result").innerText="";
+}
+
+function check(){
+
+ const v = verbs[current].forms;
+
+ const answers = [
+  document.getElementById("s1").value,
+  document.getElementById("s2").value,
+  document.getElementById("s3").value,
+  document.getElementById("p1").value,
+  document.getElementById("p2").value,
+  document.getElementById("p3").value
+ ];
+
+ let ok = true;
+
+ for(let i=0;i<6;i++){
+  if(normalize(answers[i])!==normalize(v[i])){
+   ok=false;
+  }
+ }
+
+ document.getElementById("result").innerText =
+  ok ? "⭕ 正解！" :
+  "❌ 正解は: " + v.join(" / ");
+}
+
+function next(){
+ current = (current+1)%verbs.length;
+ render();
+}
+
+render();
+
+</script>
+</body>
+</html>
