@@ -60,10 +60,17 @@ button{
 
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
   <button onclick="history.back()">←</button>
-  <h2 style="margin:0;">🚶 移動動詞 現在形</h2>
+  <h2 style="margin:0;">移動動詞 現在形</h2>
   <div style="width:40px;"></div>
 </div>
 
+<div style="display:flex; justify-content:center; gap:20px; margin-bottom:15px;">
+  <button onclick="showTense('present')" id="presentBtn">現在形</button>
+  <button onclick="showTense('past')" id="pastBtn">過去形</button>
+</div>
+
+<div id="tenseContent"></div> 
+ 
 <div class="card">
 <div id="verbTitle"></div>
 
@@ -101,6 +108,68 @@ button{
 
 </div>
 
+<script>
+function showTense(type){
+
+  const content = document.getElementById("tenseContent");
+
+  if(type === "present"){
+    content.innerHTML = `
+      <div class="card">
+        <h3>идти（定向）現在形</h3>
+        я иду<br>
+        ты идёшь<br>
+        он идёт<br>
+        мы идём<br>
+        вы идёте<br>
+        они идут
+      </div>
+
+      <div class="card">
+        <h3>ходить（不定向）現在形</h3>
+        я хожу<br>
+        ты ходишь<br>
+        он ходит<br>
+        мы ходим<br>
+        вы ходите<br>
+        они ходят
+      </div>
+    `;
+  }
+
+  if(type === "past"){
+    content.innerHTML = `
+      <div class="card">
+        <h3>идти 過去形</h3>
+        男性：шёл<br>
+        女性：шла<br>
+        中性：шло<br>
+        複数：шли
+      </div>
+
+      <div class="card">
+        <h3>нести 過去形</h3>
+        男性：нёс<br>
+        女性：несла<br>
+        中性：несло<br>
+        複数：несли
+      </div>
+
+      <div class="card">
+        <h3>вести 過去形</h3>
+        男性：вёл<br>
+        女性：вела<br>
+        中性：вело<br>
+        複数：вели
+      </div>
+    `;
+  }
+}
+
+// 初期表示
+showTense("present");
+</script> 
+ 
 <script>
 
 // ==== アクセント除去 ====
@@ -219,3 +288,4 @@ render();
 </body>
 
 </html>
+
