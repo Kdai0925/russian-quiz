@@ -3,54 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>移動動詞 現在形</title>
+<title>人称変化</title>
 
 <style>
 body{
- font-family:-apple-system,BlinkMacSystemFont,sans-serif;
- margin:0;
- padding:20px;
- background:linear-gradient(to bottom,#0f2027,#203a43,#2c5364);
- color:white;
- min-height:100vh;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  margin:0;
+  padding:20px;
+  background:linear-gradient(to bottom,#0f2027,#203a43,#2c5364);
+  color:white;
+  min-height:100vh;
 }
-
 .container{ max-width:500px; margin:auto; }
 
 .card{
- background:rgba(255,255,255,0.1);
- padding:20px;
- border-radius:15px;
- backdrop-filter:blur(15px);
- box-shadow:0 0 20px rgba(0,0,0,0.4);
+  background:rgba(255,255,255,0.1);
+  padding:20px;
+  border-radius:15px;
+  backdrop-filter:blur(15px);
+  box-shadow:0 0 20px rgba(0,0,0,0.4);
+  margin-bottom:15px;
 }
 
 table{
- width:100%;
- table-layout:fixed;
- margin-top:15px;
+  width:100%;
+  table-layout:fixed;
+  margin-top:15px;
 }
-
 td{
- padding:8px;
- text-align:center;
+  padding:8px;
+  text-align:center;
 }
-
 input{
- width:100%;
- padding:8px;
- border-radius:6px;
- border:none;
- box-sizing:border-box;
+  width:100%;
+  padding:8px;
+  border-radius:6px;
+  border:none;
+  box-sizing:border-box;
+}
+button{
+  margin:5px;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:rgba(255,255,255,0.2);
+  color:white;
 }
 
-button{
- margin:5px;
- padding:10px;
- border:none;
- border-radius:8px;
- background:rgba(255,255,255,0.2);
- color:white;
+/* タブ風 */
+.tabbar{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  margin-bottom:15px;
+}
+.tab.active{
+  font-weight:bold;
+  border-bottom:3px solid white;
 }
 </style>
 </head>
@@ -60,232 +69,150 @@ button{
 
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
   <button onclick="history.back()">←</button>
-  <h2 style="margin:0;">移動動詞 現在形</h2>
+  <h2 style="margin:0;">人称変化</h2>
   <div style="width:40px;"></div>
 </div>
 
-<div style="display:flex; justify-content:center; gap:20px; margin-bottom:15px;">
-  <button onclick="showTense('present')" id="presentBtn">現在形</button>
-  <button onclick="showTense('past')" id="pastBtn">過去形</button>
+<div class="tabbar">
+  <button id="presentBtn" class="tab active" onclick="showTense('present')">現在形</button>
+  <button id="pastBtn" class="tab" onclick="showTense('past')">過去形</button>
 </div>
 
-<div id="tenseContent"></div> 
- 
-<div class="card">
-<div id="verbTitle"></div>
-
-<table>
-<tr>
-<td></td>
-<td>単数</td>
-<td>複数</td>
-</tr>
-
-<tr>
-<td>1人称</td>
-<td><input id="s1"></td>
-<td><input id="p1"></td>
-</tr>
-
-<tr>
-<td>2人称</td>
-<td><input id="s2"></td>
-<td><input id="p2"></td>
-</tr>
-
-<tr>
-<td>3人称</td>
-<td><input id="s3"></td>
-<td><input id="p3"></td>
-</tr>
-</table>
-
-<button onclick="check()">答え合わせ</button>
-<button onclick="next()">次の問題</button>
-
-<div id="result"></div>
-</div>
+<div id="quizArea"></div>
 
 </div>
 
 <script>
+// ===== アクセント無視 =====
+function normalize(s){
+  return (s||"")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0301]/g,"")
+    .replace(/ё/g,"е").replace(/Ё/g,"Е")
+    .normalize("NFC");
+}
+
+let tense = "present";
+let current = 0;
+
+// ===== データ =====
+const presentVerbs = [
+ {inf:"идти", forms:["иду","идёшь","идёт","идём","идёте","идут"]},
+ {inf:"нести", forms:["несу","несёшь","несёт","несём","несёте","несут"]},
+ {inf:"вести", forms:["веду","ведёшь","ведёт","ведём","ведёте","ведут"]},
+ {inf:"ходить", forms:["хожу","ходишь","ходит","ходим","ходите","ходят"]}
+];
+
+const pastVerbs = [
+ {inf:"идти", forms:["шёл","шла","шло","шли"]},
+ {inf:"нести", forms:["нёс","несла","несло","несли"]},
+ {inf:"вести", forms:["вёл","вела","вело","вели"]}
+];
+
+// ===== 表示切替 =====
 function showTense(type){
+  tense = type;
+  current = 0;
 
-  const content = document.getElementById("tenseContent");
+  document.getElementById("presentBtn").classList.toggle("active", type==="present");
+  document.getElementById("pastBtn").classList.toggle("active", type==="past");
 
-  if(type === "present"){
-    content.innerHTML = `
+  render();
+}
+
+// ===== 描画 =====
+function render(){
+  const area = document.getElementById("quizArea");
+
+  if(tense==="present"){
+    const v = presentVerbs[current];
+    area.innerHTML = `
       <div class="card">
-        <h3>идти（定向）現在形</h3>
-        я иду<br>
-        ты идёшь<br>
-        он идёт<br>
-        мы идём<br>
-        вы идёте<br>
-        они идут
-      </div>
-
-      <div class="card">
-        <h3>ходить（不定向）現在形</h3>
-        я хожу<br>
-        ты ходишь<br>
-        он ходит<br>
-        мы ходим<br>
-        вы ходите<br>
-        они ходят
-      </div>
-    `;
-  }
-
-  if(type === "past"){
-    content.innerHTML = `
-      <div class="card">
-        <h3>идти 過去形</h3>
-        男性：шёл<br>
-        女性：шла<br>
-        中性：шло<br>
-        複数：шли
-      </div>
-
-      <div class="card">
-        <h3>нести 過去形</h3>
-        男性：нёс<br>
-        女性：несла<br>
-        中性：несло<br>
-        複数：несли
-      </div>
-
-      <div class="card">
-        <h3>вести 過去形</h3>
-        男性：вёл<br>
-        女性：вела<br>
-        中性：вело<br>
-        複数：вели
+        <h3>不定形: ${v.inf}</h3>
+        <table>
+          <tr><td></td><td>単数</td><td>複数</td></tr>
+          <tr><td>1人称</td><td><input id="s1"></td><td><input id="p1"></td></tr>
+          <tr><td>2人称</td><td><input id="s2"></td><td><input id="p2"></td></tr>
+          <tr><td>3人称</td><td><input id="s3"></td><td><input id="p3"></td></tr>
+        </table>
+        <button onclick="check()">答え合わせ</button>
+        <button onclick="next()">次の問題</button>
+        <div id="result"></div>
       </div>
     `;
   }
+
+  if(tense==="past"){
+    const v = pastVerbs[current];
+    area.innerHTML = `
+      <div class="card">
+        <h3>不定形: ${v.inf}</h3>
+        <table>
+          <tr><td>男性</td><td><input id="m"></td></tr>
+          <tr><td>女性</td><td><input id="f"></td></tr>
+          <tr><td>中性</td><td><input id="n"></td></tr>
+          <tr><td>複数</td><td><input id="pl"></td></tr>
+        </table>
+        <button onclick="check()">答え合わせ</button>
+        <button onclick="next()">次の問題</button>
+        <div id="result"></div>
+      </div>
+    `;
+  }
+}
+
+// ===== 判定 =====
+function check(){
+  let ok = true;
+
+  if(tense==="present"){
+    const v = presentVerbs[current].forms;
+    const ans = [
+      document.getElementById("s1").value,
+      document.getElementById("s2").value,
+      document.getElementById("s3").value,
+      document.getElementById("p1").value,
+      document.getElementById("p2").value,
+      document.getElementById("p3").value
+    ];
+    for(let i=0;i<6;i++){
+      if(normalize(ans[i])!==normalize(v[i])) ok=false;
+    }
+    document.getElementById("result").innerText =
+      ok ? "⭕ 正解！" : "❌ 正解: " + v.join(" / ");
+  }
+
+  if(tense==="past"){
+    const v = pastVerbs[current].forms;
+    const ans = [
+      document.getElementById("m").value,
+      document.getElementById("f").value,
+      document.getElementById("n").value,
+      document.getElementById("pl").value
+    ];
+    for(let i=0;i<4;i++){
+      if(normalize(ans[i])!==normalize(v[i])) ok=false;
+    }
+    document.getElementById("result").innerText =
+      ok ? "⭕ 正解！" : "❌ 正解: " + v.join(" / ");
+  }
+}
+
+// ===== 次の問題 =====
+function next(){
+  if(tense==="present"){
+    current = (current+1)%presentVerbs.length;
+  } else {
+    current = (current+1)%pastVerbs.length;
+  }
+  render();
 }
 
 // 初期表示
-showTense("present");
-</script> 
- 
-<script>
-
-// ==== アクセント除去 ====
-function normalize(s){
- return (s||"")
-   .trim()
-   .normalize("NFD")
-   .replace(/[\u0301]/g,"")
-   .replace(/ё/g,"е").replace(/Ё/g,"Е")
-   .normalize("NFC");
-}
-
-// ==== 問題データ（写真2枚目以降より） ====
-
-const verbs = [
-
-{
- infinitive:"идти",
- forms:["иду","идёшь","идёт","идём","идёте","идут"]
-},
-
-{
- infinitive:"ехать",
- forms:["еду","едешь","едет","едем","едете","едут"]
-},
-
-{
- infinitive:"плыть",
- forms:["плыву","плывёшь","плывёт","плывём","плывёте","плывут"]
-},
-
-{
- infinitive:"нести",
- forms:["несу","несёшь","несёт","несём","несёте","несут"]
-},
-
-{
- infinitive:"вести",
- forms:["веду","ведёшь","ведёт","ведём","ведёте","ведут"]
-},
-
-{
- infinitive:"лезть",
- forms:["лезу","лезешь","лезет","лезем","лезете","лезут"]
-},
-
-{
- infinitive:"ходить",
- forms:["хожу","ходишь","ходит","ходим","ходите","ходят"]
-},
-
-{
- infinitive:"ездить",
- forms:["езжу","ездишь","ездит","ездим","ездите","ездят"]
-},
-
-{
- infinitive:"лететь",
- forms:["лечу","летишь","летит","летим","летите","летят"]
-},
-
-{
- infinitive:"носить",
- forms:["ношу","носишь","носит","носим","носите","носят"]
-}
-
-];
-
-let current = 0;
-
-function render(){
- document.getElementById("verbTitle").innerText =
-  "不定形: " + verbs[current].infinitive;
-
- ["s1","s2","s3","p1","p2","p3"].forEach(id=>{
-  document.getElementById(id).value="";
- });
-
- document.getElementById("result").innerText="";
-}
-
-function check(){
-
- const v = verbs[current].forms;
-
- const answers = [
-  document.getElementById("s1").value,
-  document.getElementById("s2").value,
-  document.getElementById("s3").value,
-  document.getElementById("p1").value,
-  document.getElementById("p2").value,
-  document.getElementById("p3").value
- ];
-
- let ok = true;
-
- for(let i=0;i<6;i++){
-  if(normalize(answers[i])!==normalize(v[i])){
-   ok=false;
-  }
- }
-
- document.getElementById("result").innerText =
-  ok ? "⭕ 正解！" :
-  "❌ 正解は: " + v.join(" / ");
-}
-
-function next(){
- current = (current+1)%verbs.length;
- render();
-}
-
 render();
-
 </script>
-</body>
 
+</body>
 </html>
 
